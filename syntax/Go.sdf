@@ -122,7 +122,7 @@ exports
 		CharLit -> BasicLit
 
 		PackageName "." Identifier	-> QualifiedIdent{cons("PackageQualifiedIdent")}
-		Identifier					-> QualifiedIdent{cons("QualifiedIdent")}
+		Identifier					-> QualifiedIdent{cons("QualifiedIdent"),avoid}
 
 		LiteralType LiteralValue	-> CompositeLit{cons("CompositeLit")}
 		StructType					-> LiteralType
@@ -148,7 +148,7 @@ exports
 
 		Operand						-> PrimaryExpr
 		Conversion					-> PrimaryExpr
-		BuiltinCall					-> PrimaryExpr
+		BuiltinCall					-> PrimaryExpr{avoid}
 		%% TODO: remove left recursion
 		PrimaryExpr Selector		-> PrimaryExpr{cons("SelectorPrimaryExpr")}
 		PrimaryExpr Index			-> PrimaryExpr{cons("IndexPrimaryExpr")}
@@ -219,8 +219,8 @@ exports
 		SelectStmt		-> Statement
 		ForStmt			-> Statement
 		DeferStmt		-> Statement
-		EmptyStmt		-> SimpleStmt
-		ExpressionStmt	-> SimpleStmt
+		EmptyStmt		-> SimpleStmt{avoid}
+		ExpressionStmt	-> SimpleStmt{avoid}
 		SendStmt		-> SimpleStmt
 		IncDecStmt		-> SimpleStmt
 		Assignment		-> SimpleStmt
