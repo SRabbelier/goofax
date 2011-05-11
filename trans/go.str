@@ -41,7 +41,6 @@ rules // Main editor interface (defined by editor/Go-Builders and -References.es
   editor-resolve:
     (node, position, ast, path, project-path) -> target
     where
-      <debug(!"Resolve: ")> node; 
       Type(type) := node; 
       target     := <GetEntity> type
 
