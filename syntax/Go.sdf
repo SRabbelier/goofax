@@ -10,6 +10,8 @@ exports
 		Start
 
 	context-free syntax
+		SourceFile -> Start
+
 		CharLit -> Identifier
 
 		TypeName -> TypeName{cons("NamedType")}
@@ -315,7 +317,7 @@ exports
 		Type "," ExpressionList					-> BuiltinArgs{cons("TypedBuiltinArgs")}
 		ExpressionList							-> BuiltinArgs{cons("BuiltinArgs")}
 
-		PackageClause ImportDecl {TopLevelDecl ";" }*	-> Start{cons("Start")}
+		PackageClause { ImportDecl ";" }* {TopLevelDecl ";" }*	-> SourceFile{cons("SourceFile")}
 
 		"package" PackageName	-> PackageClause{cons("PackageClause")}
 		Identifier 				-> PackageName{cons("PackageName")}
