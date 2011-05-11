@@ -1,0 +1,16 @@
+module Go.main
+
+imports Go-Builders Go-Colorer Go-Completions Go-Folding Go-Outliner Go-References Go-Syntax
+
+language General properties
+                  
+  name          : Go
+  id            : go
+  extends       : Root
+                  
+  description   : "Spoofax/IMP-generated editor for the Go language"
+  url           : http://strategoxt.org
+                  
+  extensions    : go
+  table         : include/Go.tbl
+  start symbols : Start

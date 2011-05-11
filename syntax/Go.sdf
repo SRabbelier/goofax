@@ -1,0 +1,344 @@
+%% Grammar for the Go language
+%% By default, based on an example "entities" syntax
+module Go
+
+imports Common
+
+exports
+
+	context-free start-symbols
+		Start
+
+	context-free syntax
+		CharLit -> Identifier
+
+		TypeName -> TypeName{cons("NamedType")}
+		TypeLit -> Type{cons("LiteralType")}
+		"(" Type ")" -> Type{cons("CastedType")}
+		QualifiedIdent -> TypeName{cons("QualifiedType")}
+
+		ArrayType		-> TypeLit
+		StructType		-> TypeLit
+		PointerType		-> TypeLit
+		FunctionType	-> TypeLit
+		InterfaceType	-> TypeLit
+		SliceType		-> TypeLit
+		MapType			-> TypeLit
+		ChannelType		-> TypeLit
+
+		"[" ArrayLength "]" ElementType	-> ArrayType{cons("ArrayType")}
+		Expression						-> ArrayLength
+		Type							-> ElementType
+
+		"[" "]" ElementType	-> SliceType{cons("SliceType")}
+
+		"struct" "{" { FieldDecl ";" }* "}"	-> StructType{cons("StructType")}
+		IdentifierList Type Tag?			-> FieldDecl{cons("FieldDecl")}
+		AnonymousField Tag?					-> FieldDecl{cons("AnonymousFieldDecl")}
+		"*"? TypeName						-> AnonymousField{cons("AnonymousField")}
+		StringLit							-> Tag
+
+		"*" BaseType -> PointerType{cons("PointerType")}
+		Type -> BaseType
+
+		"func" Signature				-> FunctionType{cons("FunctionType")}
+		Parameters Result?				-> Signature{cons("Signature")}
+		Parameters						-> Result
+		Type							-> Result
+		"(" (ParamaterList ","?)? ")"	-> Parameters{cons("Parameters")}
+		{ ParameterDecl "," }+			-> ParamaterList{cons("ParamaterList")}
+		IdentifierList? "..."? Type		-> ParameterDecl{cons("ParameterDecl")}
+
+		"interface" "{" { MethodSpec ";" }* "}"	-> InterfaceType{cons("InterfaceType")}
+		MethodName Signature					-> MethodSpec{cons("MethodSpec")}
+		InterfaceTypeName						-> MethodSpec{cons("InterfaceMethodSpec")}
+		Identifier								-> MethodName
+		TypeName								-> InterfaceTypeName
+
+		"map" "[" KeyType "]" ElementType	-> MapType{cons("MapType")}
+		Type								-> KeyType
+
+		"chan" ElementType		-> ChannelType{cons("SendReceiveChan")}
+		"chan" "<-" ElementType	-> ChannelType{cons("SendChan")}
+		"<-" "chan" ElementType	-> ChannelType{cons("ReceiveChan")}
+
+		"{" { Statement ";" }* "}" -> Block{cons("Block")}
+
+		ConstDecl -> Declaration
+		TypeDecl -> Declaration
+		VarDecl -> Declaration
+		
+		Declaration -> TopLevelDecl
+		FunctionDecl -> TopLevelDecl
+		MethodDecl -> TopLevelDecl
+
+		"const" ConstSpec -> ConstDecl{cons("SingleConstDecl")}
+		"const" "(" { ConstSpec ";" }* ")" -> ConstDecl{cons("MultiConstDecl")}
+		IdentifierList -> ConstSpec{cons("ConstSpec")}
+		IdentifierList Type? "=" ExpressionList -> ConstSpec{cons("AssignedConstSpec")}
+
+		{ Identifier ","}+	-> IdentifierList{cons("IdentifierList")}
+		{ Expression ","}+	-> ExpressionList{cons("ExpressionList")}
+
+		"type" TypeSpec -> TypeDecl{cons("SingleTypeDecl")}
+		"type" "(" { TypeSpec ";" }* ")" -> TypeDecl{cons("MultiTypeDecl")}
+		Identifier Type -> TypeSpec{cons("TypeSpec")}
+
+		"var" VarSpec -> VarDecl{cons("SingleVarDecl")}
+		"var" "(" { VarSpec ";" }*")" -> VarDecl{cons("MultiVarDecl")}
+		IdentifierList -> VarSpec{cons("VarSpec")}
+		IdentifierList Type -> VarSpec{cons("TypedVarSpec")}
+		IdentifierList Type "=" ExpressionList -> VarSpec{cons("TypedAssignedVarSpec")}
+		IdentifierList "=" ExpressionList -> VarSpec{cons("AssignedVarSpec")}
+
+		IdentifierList ":=" ExpressionList -> ShortVarDecl{cons("ShortVarDecl")}
+
+		"func" Identifier Signature Body? -> FunctionDecl{cons("FunctionDecl")}
+		Block -> Body
+
+		"func" Receiver MethodName Signature Body? -> MethodDecl{cons("MethodDecl")}
+		"(" Identifier? "*"? BaseTypeName ")" -> Receiver{cons("Receiver")}
+		Identifier -> BaseTypeName
+
+		Literal -> Operand
+		QualifiedIdent -> Operand
+		MethodExpr -> Operand
+		"(" Expression ")" -> Operand{cons("ExpressionOperand")}
+
+		BasicLit -> Literal
+		CompositeLit -> Literal
+		FunctionLit -> Literal
+		%% TODO: Add other literals
+		IntLit -> BasicLit
+		CharLit -> BasicLit
+
+		PackageName "." Identifier -> QualifiedIdent{cons("PackageQualifiedIdent")}
+		Identifier -> QualifiedIdent{cons("QualifiedIdent")}
+
+		LiteralType LiteralValue -> CompositeLit{cons("CompositeLit")}
+		StructType -> LiteralType
+		ArrayType -> LiteralType
+		"[" "..." "]" ElementType -> LiteralType{cons("TripleDotLiteralType")}
+		SliceType -> LiteralType
+		MapType -> LiteralType
+		TypeName -> LiteralType
+		"{" "}" -> LiteralValue{cons("EmptyLiteralValue")}
+		"{" ElementList ","? "}" -> LiteralValue{cons("LiteralValue")}
+		{ Element "," }+ -> ElementList{cons("ElementList")}
+		Value -> Element{cons("UnkeyedElement")}
+		Key ":" Value -> Element{cons("KeyElement")}
+		Identifier -> FieldName
+		FieldName -> Key
+		ElementIndex -> Key
+		Expression -> ElementIndex
+		Expression -> Value
+		LiteralValue -> Value
+
+		FunctionType Body -> FunctionLit{cons("FunctionLit")}
+
+		Operand -> PrimaryExpr
+		Conversion -> PrimaryExpr
+		BuiltinCall -> PrimaryExpr
+		PrimaryExpr Selector -> PrimaryExpr{cons("SelectorPrimaryExpr")}
+		PrimaryExpr Index -> PrimaryExpr{cons("IndexPrimaryExpr")}
+		PrimaryExpr TypeAssertion -> PrimaryExpr{cons("TypeAssertionPrimaryExpr")}
+		PrimaryExpr Call -> PrimaryExpr{cons("CallPrimaryExpr")}
+
+		"." Identifier -> Selector{cons("Selector")}
+		"[" Expression "]" -> Index{cons("Index")}
+		"[" Expression? ":" Expression? "]" -> Slice{cons("Slice")}
+		"." "(" Type ")" -> TypeAssertion{cons("TypeAssertion")}
+		"(" ")" -> Call{cons("NoArgCall")}
+		"(" ArgumentList ","? ")" -> Call{cons("Call")}
+		ExpressionList "..."? -> ArgumentList{cons("ArgumentList")}
+
+		UnaryExpr -> Expression{cons("UnaryExpression")}
+		Expression BinaryOp UnaryExpr -> Expression{cons("Expression")}
+		PrimaryExpr -> UnaryExpr{cons("PrimaryUnaryExpr")}
+		UnaryOp UnaryExpr -> UnaryExpr{cons("UnaryExpr")}
+
+		"||" -> BinaryOp{cons("OrOp")}
+		"&&" -> BinaryOp{cons("AndOp")}
+		RelOp -> BinaryOp
+		AddOp -> BinaryOp
+		MulOp -> BinaryOp
+		"==" -> RelOp{cons("EqOp")}
+		"!=" -> RelOp{cons("NeqOp")}
+		"<" -> RelOp{cons("LtOp")}
+		"<=" -> RelOp{cons("LetOp")}
+		">" -> RelOp{cons("GtOp")}
+		">=" -> RelOp{cons("GteOp")}
+		"+" -> AddOp{cons("AddOp")}
+		"-" -> AddOp{cons("SubOp")}
+		"|" -> AddOp{cons("BitOrOp")}
+		"^" -> AddOp{cons("XorOp")}
+		"*" -> MulOp{cons("MulOp")}
+		"/" -> MulOp{cons("DivOp")}
+		"%" -> MulOp{cons("ModuloOp")}
+		"<<" -> MulOp{cons("LeftShiftOp")}
+		">>" -> MulOp{cons("RightShiftOp")}
+		"&" -> MulOp{cons("BitAndOp")}
+		"&^" -> MulOp{cons("BitClearOp")}
+		"+" -> UnaryOp{cons("PositiveOp")}
+		"-" -> UnaryOp{cons("NegativeOp")}
+		"!" -> UnaryOp{cons("NotOp")}
+		"*" -> UnaryOp{cons("DerefOp")}
+		"&" -> UnaryOp{cons("AddressOp")}
+		"<-" -> UnaryOp{cons("ReceiveOp")}
+
+	%% TODO: operator precedence
+
+		ReceiverType "." MethodName -> MethodExpr{cons("MethodExpr")}
+		TypeName -> ReceiverType{cons("ReceiverType")}
+		"(" "*" TypeName ")" -> ReceiverType{cons("PointerReceiverType")}
+
+		Type "(" Expression ")" -> Conversion{cons("Conversion")}
+
+		Declaration -> Statement
+		LabeledStmt -> Statement
+		SimpleStmt -> Statement
+		GoStmt -> Statement
+		ReturnStmt -> Statement
+		ContinueStmt -> Statement
+		GotoStmt -> Statement
+		FallthroughStmt -> Statement
+		Block -> Statement
+		IfStmt -> Statement
+		SwitchStmt -> Statement
+		SelectStmt -> Statement
+		ForStmt -> Statement
+		DeferStmt -> Statement
+		EmptyStmt -> SimpleStmt
+		ExpressionStmt -> SimpleStmt
+		SendStmt -> SimpleStmt
+		IncDecStmt -> SimpleStmt
+		Assignment -> SimpleStmt
+		ShortVarDecl -> SimpleStmt
+
+		% empty %	-> EmptyStmt{cons("EmptyStmt")}
+
+		Label ":" Statement -> LabeledStmt{cons("LabeledStmt")}
+		Identifier -> Label
+
+		Expression -> ExpressionStmt
+
+		Channel "<-" Expression -> SendStmt{cons("SendStmt")}
+		Expression -> Channel
+
+		Expression "++" -> IncDecStmt{cons("IncStmt")}
+		Expression "--" -> IncDecStmt{cons("DecStmt")}
+
+		ExpressionList AssignOp ExpressionList -> Assignment{cons("Assignment")}
+		AddOp "=" -> AssignOp{cons("AddAssignOp")}
+		MulOp "=" -> AssignOp{cons("MulAssignOp")}
+		"=" -> AssignOp{cons("AssignOp")}
+
+		"if" (SimpleStmt ";")? Expression Block -> IfStmt{cons("IfStmt")}
+		"if" (SimpleStmt ";")? Expression Block "else" Statement -> IfStmt{cons("IfElseStmt")}
+
+		ExprSwitchStmt -> SwitchStmt
+		TypeSwitchStmt -> SwitchStmt
+
+		"switch" (SimpleStmt ";")? Expression "{" ExprCaseClause* "}" -> ExprSwitchStmt{cons("ExprSwitchStmt")}
+		ExprSwitchCase ":" { Statement ";" }+ -> ExprCaseClause{cons("ExprCaseClause")}
+		"case" ExpressionList -> ExprSwitchCase{cons("ExprSwitchCase")}
+		"default" -> ExprSwitchCase{cons("DefaultExprSwitchCase")}
+
+		"switch" (SimpleStmt ";")? TypeSwitchGuard "{" TypeCaseClause* "}" -> TypeSwitchStmt{cons("TypeSwitchStmt")}
+		(Identifier ":=")? PrimaryExpr "." "(" "type" ")" -> TypeSwitchGuard{cons("TypeSwitchGuard")}
+		TypeSwitchCase ":" { Statement ";" }* -> TypeCaseClause{cons("TypeCaseClause")}
+		"case" TypeList -> TypeSwitchCase{cons("TypeSwitchCase")}
+		"default" -> TypeSwitchCase{cons("DefaultTypeSwitchCase")}
+		{ Type "," }+ -> TypeList{cons("TypeList")}
+
+		"for" Block -> ForStmt{cons("ForeverFor")}
+		"for" Condition Block -> ForStmt{cons("ConditionalFor")}
+		"for" ForClause Block -> ForStmt{cons("ForClauseFor")}
+		"for" RangeClause Block -> ForStmt{cons("RangeClauseFor")}
+		Expression -> Condition
+
+		InitStmt? ";" Condition? ";" PostStmt? -> ForClause{cons("ForClause")}
+		SimpleStmt -> InitStmt
+		SimpleStmt -> PostStmt
+
+		{ Expression "," }+ ("=" | ":=") "range" Expression -> RangeClause{cons("RangeClause")} 
+
+		"go" Expression -> GoStmt{cons("GoStmt")}
+
+		"select" "{" CommClause* "}" -> SelectStmt{cons("SelectStmt")}
+		CommCase ":" { Statement ";" }+ -> CommClause{cons("CommClause")}
+		"case" SendStmt -> CommCase{cons("SendCommCase")}
+		"case" RecvStmt -> CommCase{cons("ReceiveCommCase")}
+		"default" -> CommCase{cons("DefaultCommCase")}
+		Expression ("," Expression)? ("=" | ":=")? RecvExpr -> RecvStmt{cons("AssignedRecvStmt")}
+		RecvExpr -> RecvStmt{cons("RecvStmt")}
+		Expression -> RecvExpr
+
+		"return" -> ReturnStmt{cons("EmptyReturnStmt")}
+		"return" ExpressionList -> ReturnStmt{cons("ReturnStmt")}
+
+		"break" -> BreakStmt{cons("EmptyBreakStmt")}
+		"break" Label -> BreakStmt{cons("BreakStmt")}
+
+		"continue" -> ContinueStmt{cons("EmptyContinueStmt")}
+		"continue" Label -> ContinueStmt{cons("ContinueStmt")}
+
+		"goto" -> GotoStmt{cons("EmptyGotoStmt")}
+		"goto" Label -> GotoStmt{cons("GotoStmt")}
+
+		"fallthrough" -> FallthroughStmt{cons("FallthroughStmt")}
+
+		"defer" Expression -> DeferStmt{cons("DeferStmt")}
+
+		Identifier "(" ")" -> BuiltinCall{cons("NoArgsBuiltinCall")}
+		Identifier "(" BuiltinArgs ","? ")" -> BuiltinCall{cons("BuiltinCall")}
+		Type -> BuiltinArgs{cons("TypedEmptyBuiltinArgs")}
+		Type "," ExpressionList -> BuiltinArgs{cons("TypedBuiltinArgs")}
+		ExpressionList -> BuiltinArgs{cons("BuiltinArgs")}
+
+		PackageClause ImportDecl {TopLevelDecl ";" }* -> Start{cons("Start")}
+
+		"package" PackageName			-> PackageClause{cons("PackageClause")}
+		Identifier 						-> PackageName{cons("PackageName")}
+
+		"import" ImportSpec				-> ImportDecl{cons("SingleImportDecl")}
+		"import" "(" { ImportSpec ";" }* ")"	-> ImportDecl{cons("MultiImportDecl")}
+		ImportPath						-> ImportSpec{cons("ImportSpec")}
+		"." ImportPath					-> ImportSpec{cons("PeriodImportSpec")}
+		PackageName ImportPath			-> ImportSpec{cons("NamedImportSpec")}
+		StringLit						-> ImportPath{cons("ImportPath")}
+
+	lexical syntax
+		"break"			-> Keyword
+		"case"			-> Keyword
+		"chan"			-> Keyword
+		"const"			-> Keyword
+		"continue"		-> Keyword
+		"default"		-> Keyword
+		"defer"			-> Keyword
+		"else"			-> Keyword
+		"fallthrough"	-> Keyword
+		"for"			-> Keyword
+		"func"			-> Keyword
+		"go"			-> Keyword
+		"goto"			-> Keyword
+		"if"			-> Keyword
+		"import"		-> Keyword
+		"interface"		-> Keyword
+		"map"			-> Keyword
+		"package"		-> Keyword
+		"range"			-> Keyword
+		"return"		-> Keyword
+		"select"		-> Keyword
+		"struct"		-> Keyword
+		"switch"		-> Keyword
+		"type"			-> Keyword
+		"var"			-> Keyword
+
+		Keyword -> ID {reject}
+
+	lexical restrictions
+		"break" "case" "chan" "const" "continue" "default" "defer"
+		"else" "fallthrough" "for" "func" "go" "goto" "if" "import"
+		"interface" "map" "package" "range" "return" "select"
+		"struct" "switch" "type" "var" -/- [a-zA-Z0-9]
