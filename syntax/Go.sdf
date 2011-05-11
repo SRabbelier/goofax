@@ -10,14 +10,14 @@ exports
 		Start
 
 	context-free syntax
-		SourceFile -> Start
+		SourceFile	-> Start
 
-		CharLit -> Identifier
+		CharLit	-> Identifier
 
-		TypeName -> TypeName{cons("NamedType")}
-		TypeLit -> Type{cons("LiteralType")}
-		"(" Type ")" -> Type{cons("CastedType")}
-		QualifiedIdent -> TypeName{cons("QualifiedType")}
+		TypeName		-> TypeName{cons("NamedType")}
+		TypeLit			-> Type{cons("LiteralType")}
+		"(" Type ")"	-> Type{cons("CastedType")}
+		QualifiedIdent	-> TypeName{cons("QualifiedType")}
 
 		ArrayType		-> TypeLit
 		StructType		-> TypeLit
@@ -42,8 +42,8 @@ exports
 											-> OptStar{cons("NoOptStar")}
 		StringLit							-> Tag
 
-		"*" BaseType -> PointerType{cons("PointerType")}
-		Type -> BaseType
+		"*" BaseType	-> PointerType{cons("PointerType")}
+		Type			-> BaseType
 
 		"func" Signature					-> FunctionType{cons("FunctionType")}
 		Parameters Result?					-> Signature{cons("Signature")}
@@ -59,7 +59,6 @@ exports
 		"..."								-> OptTripleDot{cons("OptTripleDot")}
 											-> OptTripleDot{cons("NoOptTripleDot")}
 
-
 		"interface" "{" { MethodSpec ";" }* "}"	-> InterfaceType{cons("InterfaceType")}
 		MethodName Signature					-> MethodSpec{cons("MethodSpec")}
 		InterfaceTypeName						-> MethodSpec{cons("InterfaceMethodSpec")}
@@ -73,12 +72,12 @@ exports
 		"chan" "<-" ElementType	-> ChannelType{cons("SendChan")}
 		"<-" "chan" ElementType	-> ChannelType{cons("ReceiveChan")}
 
-		"{" { Statement ";" }* "}" -> Block{cons("Block")}
+		"{" { Statement ";" }* "}"	-> Block{cons("Block")}
 
 		ConstDecl	-> Declaration
 		TypeDecl	-> Declaration
 		VarDecl		-> Declaration
-		
+
 		Declaration		-> TopLevelDecl
 		FunctionDecl	-> TopLevelDecl
 		MethodDecl		-> TopLevelDecl
