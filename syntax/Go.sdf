@@ -354,7 +354,7 @@ exports
 		"type"			-> Keyword
 		"var"			-> Keyword
 
-		Keyword -> ID {reject}
+		Keyword -> CharLit {reject}
 
 	lexical restrictions
 		"break" "case" "chan" "const" "continue" "default" "defer"
