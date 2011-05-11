@@ -96,7 +96,6 @@ exports
 
 		"var" VarSpec							-> VarDecl{cons("SingleVarDecl")}
 		"var" "(" { VarSpec ";" }*")"			-> VarDecl{cons("MultiVarDecl")}
-		IdentifierList							-> VarSpec{cons("VarSpec")}
 		IdentifierList Type						-> VarSpec{cons("TypedVarSpec")}
 		IdentifierList Type "=" ExpressionList	-> VarSpec{cons("TypedAssignedVarSpec")}
 		IdentifierList "=" ExpressionList		-> VarSpec{cons("AssignedVarSpec")}
