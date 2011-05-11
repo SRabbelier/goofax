@@ -1,0 +1,7 @@
+/.cache
+/bin
+/include
+*.aterm
+*.generated.esv
+/editor/java
+*.generated.pp
