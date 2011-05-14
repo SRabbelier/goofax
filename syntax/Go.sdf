@@ -200,7 +200,7 @@ exports
 
 	%% TODO: operator precedence
 
-		ReceiverType "." MethodName	-> MethodExpr{cons("MethodExpr")}
+		ReceiverType "." MethodName	-> MethodExpr{cons("MethodExpr"),prefer}
 		TypeName					-> ReceiverType{cons("ReceiverType")}
 		"(" "*" TypeName ")"		-> ReceiverType{cons("PointerReceiverType")}
 
