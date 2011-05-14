@@ -147,9 +147,10 @@ exports
 		FunctionType Body	-> FunctionLit{cons("FunctionLit")}
 
 		Operand						-> PrimaryExpr
-		Conversion					-> PrimaryExpr
-		BuiltinCall					-> PrimaryExpr{avoid}
-		%% TODO: remove left recursion
+		AvoidPrimaryExpr			-> PrimaryExpr{avoid}
+		Conversion					-> AvoidPrimaryExpr
+		BuiltinCall					-> AvoidPrimaryExpr
+
 		PrimaryExpr Selector		-> PrimaryExpr{cons("SelectorPrimaryExpr")}
 		PrimaryExpr Index			-> PrimaryExpr{cons("IndexPrimaryExpr")}
 		PrimaryExpr TypeAssertion	-> PrimaryExpr{cons("TypeAssertionPrimaryExpr")}
