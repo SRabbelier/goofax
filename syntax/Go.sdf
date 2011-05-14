@@ -15,7 +15,7 @@ exports
 		CharLit	-> Identifier{cons("Identifier")}
 
 		TypeName		-> Type{cons("NamedType")}
-		TypeLit			-> Type{cons("LiteralType")}
+		TypeLit			-> Type{cons("LitType")}
 		"(" Type ")"	-> Type{cons("CastedType")}
 		QualifiedIdent	-> TypeName{cons("QualifiedType")}
 
@@ -50,7 +50,7 @@ exports
 		Parameters							-> Result
 		Type								-> Result
 		"(" OptParameterList ")"			-> Parameters{cons("Parameters")}
-		(ParamaterList OptComma)			-> OptParameterList{cons("OptParameterList")}
+		ParamaterList OptComma				-> OptParameterList{cons("OptParameterList")}
 											-> OptParameterList{cons("NoOptParameterList")}
 		","									-> OptComma{cons("OptComma")}
 											-> OptComma{cons("NoOptComma")}
