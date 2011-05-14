@@ -12,7 +12,7 @@ exports
 	context-free syntax
 		SourceFile	-> Start
 
-		CharLit	-> Identifier
+		CharLit	-> Identifier{cons("Identifier")}
 
 		TypeName		-> Type{cons("NamedType")}
 		TypeLit			-> Type{cons("LiteralType")}
@@ -118,8 +118,8 @@ exports
 		CompositeLit -> Literal
 		FunctionLit -> Literal
 		%% TODO: Add other basic literals
-		IntLit -> BasicLit
-		CharLit -> BasicLit
+		IntLit -> BasicLit{cons("IntLit")}
+		StringLit -> BasicLit{cons("StringLit")}
 
 		PackageName "." Identifier	-> QualifiedIdent{cons("PackageQualifiedIdent")}
 		Identifier					-> QualifiedIdent{cons("QualifiedIdent"),avoid}
