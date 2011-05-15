@@ -1,6 +1,6 @@
 package foo
 
-import "fmt"
+import "fmt";
 
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
 
@@ -9,9 +9,9 @@ import "fmt"
 func filter() {
 	for i := range src {	// Loop over values received from 'src'.
 		if i%prime != 0 {
-			dst <- i  // Send 'i' to channel 'dst'.
-		}
-	}
+			dst <- i;  // Send 'i' to channel 'dst'.
+		};
+	};
 };
 
 // The prime sieve: Daisy-chain filter processes together.
@@ -24,9 +24,9 @@ func sieve() {
 		ch1 := make();
 		go filter(ch, ch1, prime);
 		ch = ch1;
-	}
+	};
 };
 
 func main() {
-	sieve()
-}
+	sieve();
+};
