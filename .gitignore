@@ -5,3 +5,4 @@
 *.generated.esv
 /editor/java
 *.generated.pp
+.settings/org.eclipse.core.resources.prefs
