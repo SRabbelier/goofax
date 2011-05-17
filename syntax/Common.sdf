@@ -13,7 +13,11 @@ exports
     BackSlashChar			-> StringChar
     "\\"					-> BackSlashChar
 
-    [\ \t\n\r]				-> LAYOUT
+	[\ \t\r] -> LayoutChar
+	LayoutChar -> LAYOUT
+
+	"\n" ("\n" | LayoutChar)* -> LineBreak
+	LineBreak -> LAYOUT
 
     [\*]					-> CommentChar
     "/*" (~[\*] | CommentChar)* "*/"	-> LAYOUT
@@ -35,10 +39,13 @@ exports
     
     BackSlashChar	-/- [\"]
 
+	LineBreak -/- [\ \t\n\r]
+	LineBreak -/- [\/].[\/]
+
   context-free restrictions
   
     %% Ensure greedy matching for comments
 
-    LAYOUT? -/- [\ \t\n\r]
+	LAYOUT? -/- [\ \t\r]
     LAYOUT? -/- [\/].[\/]
     LAYOUT? -/- [\/].[\*]

@@ -35,6 +35,7 @@ exports
 		"[" "]" ElementType	-> SliceType{cons("SliceType")}
 
 		";"	-> OptSemi{cons("OptSemi")}
+		LineBreak -> OptSemi{cons("NewlineSemi")}
 
 		"struct" "{" (FieldDecl OptSemi)* "}"	-> StructType{cons("StructType")}
 		IdentifierList Type Tag?			-> FieldDecl{cons("FieldDecl")}
