@@ -14,5 +14,3 @@ language General properties
   extensions    : go
   table         : include/Go.tbl
   start symbols : Start
-
-  disambiguator: do-go-disambiguate

@@ -58,19 +58,3 @@ rules // Main editor interface (defined by editor/Go-Builders and -References.es
       if !node => Type(COMPLETION(prefix)) then
         proposals := <all-keys-GetEntity>
       end
-
-  do-go-disambiguate:
-	(ast, path, project-path) -> (ast', path, project-path)
-	with ast' := <go-disambiguate>ast
-
-  go-disambiguate:
-	amb([x, x]) -> x
-	with <debug(!"x ")>x
-
-  go-disambiguate:
-	t -> t
-	with debug(!"no fix: ")
-
-  signature
-    constructors
-      amb: Term -> Term
