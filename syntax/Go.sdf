@@ -9,6 +9,9 @@ exports
 	context-free start-symbols
 		Start
 
+	syntax
+		<Newline-CF> -> <OptSemi-CF>{cons("NewlineSemi")}
+
 	context-free syntax
 		SourceFile	-> Start
 
