@@ -46,6 +46,6 @@ exports
   
     %% Ensure greedy matching for comments
 
-	LAYOUT? -/- [\ \t\r]
+	LAYOUT? -/- [\ \t\r\n]
     LAYOUT? -/- [\/].[\/]
     LAYOUT? -/- [\/].[\*]

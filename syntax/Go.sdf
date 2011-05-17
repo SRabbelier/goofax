@@ -9,7 +9,18 @@ exports
 	context-free start-symbols
 		Start
 
+	syntax
+		<LineBreak-CF>						-> <OptSemi-CF>{cons("NewlineSemi")}
+		";"									-> <OptSemi-CF>{cons("OptSemi")}
+		(<TopLevelDecl-CF> <OptSemi-CF> <LAYOUT?-CF>)*	-> <Statements-CF>{cons("Statements")}
+		(<ImportDecl-CF> <OptSemi-CF> <LAYOUT?-CF>)*	-> <Imports-CF>{cons("Imports")}
+		<PackageClause-CF> <LAYOUT?-CF> <Imports-CF> <LAYOUT?-CF> <Statements-CF> <LAYOUT?-CF> -> <SourceFile-CF>{cons("SourceFile")}
+
 	context-free syntax
+		%%";"									-> OptSemi{cons("OptSemi")}
+
+		%%PackageClause (ImportDecl OptSemi)* (TopLevelDecl OptSemi)* -> SourceFile{cons("SourceFile")}
+
 		SourceFile	-> Start
 
 		CharLit	-> Identifier{cons("Identifier")}
@@ -33,9 +44,6 @@ exports
 		Type							-> ElementType
 
 		"[" "]" ElementType	-> SliceType{cons("SliceType")}
-
-		";"	-> OptSemi{cons("OptSemi")}
-		LineBreak -> OptSemi{cons("NewlineSemi")}
 
 		"struct" "{" (FieldDecl OptSemi)* "}"	-> StructType{cons("StructType")}
 		IdentifierList Type Tag?			-> FieldDecl{cons("FieldDecl")}
@@ -318,8 +326,6 @@ exports
 		Type									-> BuiltinArgs{cons("TypedEmptyBuiltinArgs")}
 		Type "," ExpressionList					-> BuiltinArgs{cons("TypedBuiltinArgs")}
 		ExpressionList							-> BuiltinArgs{cons("BuiltinArgs")}
-
-		PackageClause (ImportDecl OptSemi)* (TopLevelDecl OptSemi)*	-> SourceFile{cons("SourceFile")}
 
 		"package" PackageName	-> PackageClause{cons("PackageClause")}
 		Identifier 				-> PackageName{cons("PackageName")}
