@@ -34,9 +34,18 @@ exports
 
 		"[" "]" ElementType	-> SliceType{cons("SliceType")}
 
+		OptSemi+	-> Semi{cons("Semi")}
 		";"	-> OptSemi{cons("OptSemi")}
+		LineBreak	-> OptSemi{cons("NewlineSemi")}
 
-		"struct" "{" (FieldDecl OptSemi)* "}"	-> StructType{cons("StructType")}
+		LineBreak*				-> OptLineBreak{cons("OptLinebreak")}
+		"{" OptLineBreak		-> POpen{cons("POpen")}
+		"}"						-> PClose{cons("PClose")}
+		"{" OptLineBreak "}"	-> EmptyBlock{cons("EmptyBlock")}
+
+		"struct" StructDecls				-> StructType{cons("StructType")}
+		EmptyBlock							-> StructDecls
+		POpen (FieldDecl OptSemi)+ PClose	-> StructDecls{cons("StructDecls")}
 		IdentifierList Type Tag?			-> FieldDecl{cons("FieldDecl")}
 		AnonymousField Tag?					-> FieldDecl{cons("AnonymousFieldDecl")}
 		OptStar TypeName					-> AnonymousField{cons("AnonymousField")}
@@ -61,11 +70,13 @@ exports
 		"..."								-> OptTripleDot{cons("OptTripleDot")}
 											-> OptTripleDot{cons("NoOptTripleDot")}
 
-		"interface" "{" (MethodSpec OptSemi)* "}"	-> InterfaceType{cons("InterfaceType")}
-		MethodName Signature					-> MethodSpec{cons("MethodSpec")}
-		InterfaceTypeName						-> MethodSpec{cons("InterfaceMethodSpec")}
-		Identifier								-> MethodName
-		TypeName								-> InterfaceTypeName
+		"interface" InterfaceSpecs		-> InterfaceType{cons("InterfaceType")}
+		EmptyBlock						-> InterfaceSpecs
+		POpen (MethodSpec Semi)+ PClose	-> InterfaceSpecs{cons("InterfaceSpecs")}
+		MethodName Signature			-> MethodSpec{cons("MethodSpec")}
+		InterfaceTypeName				-> MethodSpec{cons("InterfaceMethodSpec")}
+		Identifier						-> MethodName
+		TypeName						-> InterfaceTypeName
 
 		"map" "[" KeyType "]" ElementType	-> MapType{cons("MapType")}
 		Type								-> KeyType
@@ -74,7 +85,8 @@ exports
 		"chan" "<-" ElementType	-> ChannelType{cons("SendChan")}
 		"<-" "chan" ElementType	-> ChannelType{cons("ReceiveChan")}
 
-		"{" (Statement OptSemi)* "}"	-> Block{cons("Block")}
+		EmptyBlock						-> Block
+		POpen (Statement Semi)+ PClose	-> Block{cons("Block")}
 
 		ConstDecl	-> Declaration
 		TypeDecl	-> Declaration
@@ -85,7 +97,7 @@ exports
 		MethodDecl		-> TopLevelDecl
 
 		"const" ConstSpec						-> ConstDecl{cons("SingleConstDecl")}
-		"const" "(" (ConstSpec OptSemi)* ")"	-> ConstDecl{cons("MultiConstDecl")}
+		"const" "(" (ConstSpec Semi)* ")"	-> ConstDecl{cons("MultiConstDecl")}
 		IdentifierList							-> ConstSpec{cons("ConstSpec")}
 		IdentifierList Type? "=" ExpressionList	-> ConstSpec{cons("AssignedConstSpec")}
 
@@ -93,11 +105,11 @@ exports
 		{ Expression ","}+	-> ExpressionList{cons("ExpressionList")}
 
 		"type" TypeSpec						-> TypeDecl{cons("SingleTypeDecl")}
-		"type" "(" (TypeSpec OptSemi)* ")"	-> TypeDecl{cons("MultiTypeDecl")}
+		"type" "(" (TypeSpec Semi)* ")"	-> TypeDecl{cons("MultiTypeDecl")}
 		Identifier Type						-> TypeSpec{cons("TypeSpec")}
 
 		"var" VarSpec							-> VarDecl{cons("SingleVarDecl")}
-		"var" "(" (VarSpec OptSemi)*")"			-> VarDecl{cons("MultiVarDecl")}
+		"var" "(" (VarSpec Semi)*")"			-> VarDecl{cons("MultiVarDecl")}
 		IdentifierList Type						-> VarSpec{cons("TypedVarSpec")}
 		IdentifierList Type "=" ExpressionList	-> VarSpec{cons("TypedAssignedVarSpec")}
 		IdentifierList "=" ExpressionList		-> VarSpec{cons("AssignedVarSpec")}
@@ -126,17 +138,17 @@ exports
 		PackageName "." Identifier	-> QualifiedIdent{cons("PackageQualifiedIdent")}
 		Identifier					-> QualifiedIdent{cons("QualifiedIdent"),avoid}
 
-		LiteralType LiteralValue	-> CompositeLit{cons("CompositeLit")}
-		StructType					-> LiteralType
-		ArrayType					-> LiteralType
-		"[" "..." "]" ElementType	-> LiteralType{cons("TripleDotLiteralType")}
-		SliceType					-> LiteralType
-		MapType						-> LiteralType
-		TypeName					-> LiteralType
-		"{" "}"						-> LiteralValue{cons("EmptyLiteralValue")}
-		"{" ElementList OptComma "}"-> LiteralValue{cons("LiteralValue")}
+		LiteralType LiteralValue			-> CompositeLit{cons("CompositeLit")}
+		StructType							-> LiteralType
+		ArrayType							-> LiteralType
+		"[" "..." "]" ElementType			-> LiteralType{cons("TripleDotLiteralType")}
+		SliceType							-> LiteralType
+		MapType								-> LiteralType
+		TypeName							-> LiteralType
+		EmptyBlock							-> LiteralValue
+		POpen ElementList OptComma PClose	-> LiteralValue{cons("LiteralValue")}
 
-		{ Element "," }+			-> ElementList{cons("ElementList")}
+					-> ElementList{cons("ElementList")}
 		Value						-> Element{cons("UnkeyedElement")}
 		Key ":" Value				-> Element{cons("KeyElement")}
 		Identifier					-> FieldName
@@ -222,7 +234,6 @@ exports
 		SelectStmt		-> Statement
 		ForStmt			-> Statement
 		DeferStmt		-> Statement
-		EmptyStmt		-> SimpleStmt{avoid}
 		ExpressionStmt	-> SimpleStmt{avoid}
 		SendStmt		-> SimpleStmt
 		IncDecStmt		-> SimpleStmt
@@ -249,25 +260,29 @@ exports
 
 		"if" OptSimpleStmt Expression Block						-> IfStmt{cons("IfStmt")}
 		"if" OptSimpleStmt Expression Block "else" Statement	-> IfStmt{cons("IfElseStmt")}
-		SimpleStmt ";"											-> OptSimpleStmt{cons("OptSimpleStmt")}
+		SimpleStmt ";"									-> OptSimpleStmt{cons("OptSimpleStmt")}
 																-> OptSimpleStmt{cons("NoOptSimpleStmt")}
 
 		ExprSwitchStmt	-> SwitchStmt
 		TypeSwitchStmt	-> SwitchStmt
 
-		"switch" OptSimpleStmt Expression "{" ExprCaseClause* "}"	-> ExprSwitchStmt{cons("ExprSwitchStmt")}
-		ExprSwitchCase ":" (Statement OptSemi)+						-> ExprCaseClause{cons("ExprCaseClause")}
-		"case" ExpressionList										-> ExprSwitchCase{cons("ExprSwitchCase")}
-		"default"													-> ExprSwitchCase{cons("DefaultExprSwitchCase")}
+		"switch" OptSimpleStmt Expression SwitchExpressions	-> ExprSwitchStmt{cons("ExprSwitchStmt")}
+		EmptyBlock											-> SwitchExpressions
+		POpen ExprCaseClause+ PClose						-> SwitchExpressions{cons("SwitchExpressions")}
+		ExprSwitchCase ":" (Statement Semi)+				-> ExprCaseClause{cons("ExprCaseClause")}
+		"case" ExpressionList								-> ExprSwitchCase{cons("ExprSwitchCase")}
+		"default"											-> ExprSwitchCase{cons("DefaultExprSwitchCase")}
 
-		"switch" OptSimpleStmt TypeSwitchGuard "{" TypeCaseClause* "}"	-> TypeSwitchStmt{cons("TypeSwitchStmt")}
-		OptAssignee PrimaryExpr "." "(" "type" ")"					-> TypeSwitchGuard{cons("TypeSwitchGuard")}
-		(Identifier ":=")												-> OptAssignee{cons("OptAssignee")}
-																		-> OptAssignee{cons("NoOptAssignee")}
-		TypeSwitchCase ":" (Statement OptSemi)*							-> TypeCaseClause{cons("TypeCaseClause")}
-		"case" TypeList													-> TypeSwitchCase{cons("TypeSwitchCase")}
-		"default"														-> TypeSwitchCase{cons("DefaultTypeSwitchCase")}
-		{ Type "," }+													-> TypeList{cons("TypeList")}
+		"switch" OptSimpleStmt TypeSwitchGuard TypeExpressions	-> TypeSwitchStmt{cons("TypeSwitchStmt")}
+		EmptyBlock												-> TypeExpressions
+		POpen TypeCaseClause+ PClose							-> TypeExpressions{cons("TypeExpressions")}
+		OptAssignee PrimaryExpr "." "(" "type" ")"				-> TypeSwitchGuard{cons("TypeSwitchGuard")}
+		(Identifier ":=")										-> OptAssignee{cons("OptAssignee")}
+																-> OptAssignee{cons("NoOptAssignee")}
+		TypeSwitchCase ":" (Statement Semi)*					-> TypeCaseClause{cons("TypeCaseClause")}
+		"case" TypeList											-> TypeSwitchCase{cons("TypeSwitchCase")}
+		"default"												-> TypeSwitchCase{cons("DefaultTypeSwitchCase")}
+		{ Type "," }+											-> TypeList{cons("TypeList")}
 
 		"for" Block				-> ForStmt{cons("ForeverFor")}
 		"for" Condition Block	-> ForStmt{cons("ConditionalFor")}
@@ -276,8 +291,8 @@ exports
 		Expression				-> Condition
 
 		InitStmt? ";" Condition? ";" PostStmt?	-> ForClause{cons("ForClause")}
-		SimpleStmt								-> InitStmt
-		SimpleStmt								-> PostStmt
+		SimpleStmt											-> InitStmt
+		SimpleStmt											-> PostStmt
 
 		{ Expression "," }+ ColonAssignOp "range" Expression	-> RangeClause{cons("RangeClause")}
 		"="														-> ColonAssignOp{cons("NoColonAssignOp")}
@@ -285,8 +300,10 @@ exports
 
 		"go" Expression -> GoStmt{cons("GoStmt")}
 
-		"select" "{" CommClause* "}"							-> SelectStmt{cons("SelectStmt")}
-		CommCase ":" (Statement OptSemi)+							-> CommClause{cons("CommClause")}
+		"select" SelectComms									-> SelectStmt{cons("SelectStmt")}
+		EmptyBlock												-> SelectComms
+		POpen CommClause+ PClose								-> SelectComms{cons("SelectComms")}
+		CommCase ":" (Statement Semi)+							-> CommClause{cons("CommClause")}
 		"case" SendStmt											-> CommCase{cons("SendCommCase")}
 		"case" RecvStmt											-> CommCase{cons("ReceiveCommCase")}
 		"default"												-> CommCase{cons("DefaultCommCase")}
@@ -318,13 +335,18 @@ exports
 		Type "," ExpressionList					-> BuiltinArgs{cons("TypedBuiltinArgs")}
 		ExpressionList							-> BuiltinArgs{cons("BuiltinArgs")}
 
-		PackageClause (ImportDecl OptSemi)* (TopLevelDecl OptSemi)*	-> SourceFile{cons("SourceFile")}
+		PackageClause Imports Decls			-> SourceFile{cons("SourceFile")}
+		PackageClause OptLineBreak Decls	-> SourceFile{cons("SourceFile")}
+		OptLineBreak (ImportDecl Semi)+		-> Imports{cons("Imports")}
+											-> Imports{cons("NoImports")}
+		(TopLevelDecl Semi)+				-> Decls{cons("Decls")}
+											-> Decls{cons("NoDecls")}
 
 		"package" PackageName	-> PackageClause{cons("PackageClause")}
 		Identifier 				-> PackageName{cons("PackageName")}
 
 		"import" ImportSpec						-> ImportDecl{cons("SingleImportDecl")}
-		"import" "(" (ImportSpec OptSemi)* ")"	-> ImportDecl{cons("MultiImportDecl")}
+		"import" "(" (ImportSpec Semi)* ")"	-> ImportDecl{cons("MultiImportDecl")}
 		ImportPath								-> ImportSpec{cons("ImportSpec")}
 		"." ImportPath							-> ImportSpec{cons("PeriodImportSpec")}
 		PackageName ImportPath					-> ImportSpec{cons("NamedImportSpec")}
