@@ -17,8 +17,10 @@ exports
 	[\n]+					-> LineBreak
 
     [\*]					-> CommentChar
-    "/*" (~[\*] | CommentChar)* "*/"	-> LAYOUT
-    "//" ~[\n\r]* ([\n\r] | EOF)		-> LAYOUT
+    "/*" (~[\*] | CommentChar)* "*/"	-> Comment
+    "/*" (~[\*\n] | CommentChar)* "*/"	-> LAYOUT
+    "//" ~[\n\r]* ([\n\r]+ | EOF)		-> Comment
+    Comment -> LineBreak
 
     -> EOF
 
@@ -41,6 +43,6 @@ exports
     %% Ensure greedy matching for comments
 
     LAYOUT? -/- [\ \t\r]
-    LAYOUT? -/- [\/].[\/]
-    LAYOUT? -/- [\/].[\*]
+    Comment? -/- [\/].[\/]
+    Comment? -/- [\/].[\*]
 	LineBreak -/- [\n]
